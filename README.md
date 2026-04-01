@@ -14,11 +14,13 @@
   - writing files
   - searching file contents
   - finding files by name
+  - fetching web pages as readable text
 
 ## Requirements
 
 - Dart SDK `^3.11.4`
 - A Google AI API key exposed as either `GOOGLE_GENAI_API_KEY` or `GEMINI_API_KEY`
+- `curl` available on your system for the `web_fetch` tool
 
 ## Install
 
@@ -52,13 +54,14 @@ lea_code \
 
 ## Built-in Tools
 
-The assistant registers five tools in `LeaCodeEngine`:
+The assistant registers six tools in `LeaCodeEngine`:
 
 - `bash`: executes a shell command with `bash -c`
 - `file_read`: reads a file from disk
 - `file_write`: writes content to a file
 - `string_search`: searches the current directory with `grep -r`
 - `file_find`: finds files and directories with `find`
+- `web_fetch`: fetches a URL
 
 These tools operate on the local machine, so use this project only in directories and environments you trust.
 
@@ -74,3 +77,4 @@ These tools operate on the local machine, so use this project only in directorie
 - The application exits early if neither `GOOGLE_GENAI_API_KEY` nor `GEMINI_API_KEY` is set.
 - Tool output is returned directly to the model, including shell stderr when present.
 - `string_search` and `file_find` run relative to the current working directory.
+- `web_fetch` returns text fetched from the target page.

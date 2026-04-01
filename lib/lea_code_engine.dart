@@ -2,6 +2,7 @@ import 'package:genkit/genkit.dart';
 import 'package:genkit_google_genai/genkit_google_genai.dart';
 import 'package:lea_code/tools/file_find.dart';
 import 'package:lea_code/tools/string_search_tool.dart';
+import 'package:lea_code/tools/web_fetch_tool.dart';
 import 'tools/bash_tool.dart';
 import 'tools/file_read_tool.dart';
 import 'tools/file_write_tool.dart';
@@ -26,6 +27,7 @@ class LeaCodeEngine {
       createFileWriteTool(ai),
       createStringSearchTool(ai),
       createFileFindTool(ai),
+      createWebFetchTool(ai),
     ];
   }
 

@@ -1,3 +1,9 @@
+## 0.0.3
+
+- Added a new `web_fetch` tool so the assistant can fetch web pages as text.
+- Registered `web_fetch` in `LeaCodeEngine` so it is available during model generation.
+- Bumped the package version from `0.0.2` to `0.0.3`.
+
 ## 0.0.2
 
 - Bumped the package version from `0.0.1` to `0.0.2`.
