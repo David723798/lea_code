@@ -49,7 +49,6 @@ lea_code \
 
 - `/new`: clear the current conversation history
 - `/exit`: quit the program
-- `/quit`: quit the program
 
 ## Built-in Tools
 

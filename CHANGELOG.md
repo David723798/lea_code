@@ -1,3 +1,7 @@
+## 0.0.2
+
+- Bumped the package version from `0.0.1` to `0.0.2`.
+
 ## 0.0.1
 
 - Added the initial `lea_code` interactive CLI entrypoint.

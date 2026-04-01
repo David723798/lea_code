@@ -36,7 +36,7 @@ void main(List<String> arguments) async {
 
   print('--- Lea Code ---');
   print('Using model: $modelName');
-  print('Type "/exit" or "/quit" to leave.');
+  print('Type "/exit" to leave.');
   print('Type "/new" to clear history and start fresh.');
 
   final engine = LeaCodeEngine(modelName: modelName);
@@ -48,9 +48,7 @@ void main(List<String> arguments) async {
 
     final trimmed = input?.trim();
 
-    if (trimmed == null ||
-        trimmed.toLowerCase() == '/exit' ||
-        trimmed.toLowerCase() == '/quit') {
+    if (trimmed == null || trimmed.toLowerCase() == '/exit') {
       break;
     }
 
