@@ -3,7 +3,9 @@ import 'dart:io';
 
 import 'package:genkit/plugin.dart';
 import 'package:lea_code/agents/general_agent.dart';
+import 'package:lea_code/tools/models/tool_runtime_models.dart';
 import 'package:lea_code/tools/models/tool_status.dart';
+import 'package:lea_code/tools/runtime/tool_runtime.dart';
 
 /// The main class for the Lea Code application.
 class LeaCode {
@@ -31,10 +33,19 @@ class LeaCode {
   Future<void> run() async {
     await welcomeMessage();
 
+    final runtime = ToolRuntime(
+      onMessage: toolMessage,
+      requestApproval: requestApproval,
+      askQuestions: askQuestions,
+      workspaceRoot: Directory.current.path,
+      currentWorkingDirectory: Directory.current.path,
+    );
+
     final agent = GeneralAgent(
       model: model,
       plugin: plugin,
       onMessage: toolMessage,
+      runtime: runtime,
       systemPrompt: systemPrompt,
       maxTurns: maxTurns,
     );
@@ -124,5 +135,40 @@ class LeaCode {
     } else {
       stdout.writeln('[${toolStatus.name}] ${toolStatus.message}');
     }
+  }
+
+  Future<bool> requestApproval(ToolApprovalRequest request) async {
+    stdout.writeln('[${request.toolName}] Approval required');
+    stdout.writeln('Reason: ${request.reason}');
+    stdout.writeln('Command: ${request.command}');
+    stdout.write('Allow? [y/N]: ');
+    final response = stdin.readLineSync()?.trim().toLowerCase() ?? '';
+    return response == 'y' || response == 'yes';
+  }
+
+  Future<Map<String, String>> askQuestions(List<ToolQuestion> questions) async {
+    final answers = <String, String>{};
+    for (final question in questions) {
+      stdout.writeln('[question] ${question.header}');
+      stdout.writeln(question.question);
+      for (var index = 0; index < question.options.length; index++) {
+        final option = question.options[index];
+        stdout.writeln(
+          '${index + 1}. ${option.label} - ${option.description}',
+        );
+      }
+
+      while (true) {
+        stdout.write('Choose 1-${question.options.length}: ');
+        final response = stdin.readLineSync()?.trim() ?? '';
+        final selectedIndex = int.tryParse(response);
+        if (selectedIndex != null && selectedIndex >= 1 && selectedIndex <= question.options.length) {
+          answers[question.id] = question.options[selectedIndex - 1].label;
+          break;
+        }
+        stdout.writeln('Please enter a valid option number.');
+      }
+    }
+    return answers;
   }
 }

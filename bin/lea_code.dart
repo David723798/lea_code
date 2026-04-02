@@ -60,7 +60,7 @@ void main(List<String> arguments) async {
   }
 
   if (argResults['version'] as bool) {
-    print('lea 0.0.6');
+    print('lea 0.0.7');
     return;
   }
 
