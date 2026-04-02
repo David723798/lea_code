@@ -1,20 +1,23 @@
 # lea_code
 
-`lea_code` is a Dart command-line coding assistant powered by Genkit and Google Gemini. It runs as an interactive terminal chat and gives the model a small set of local file and shell tools so it can inspect and modify code in your working directory.
+`lea_code` is a Dart command-line coding assistant powered by Genkit and Google Gemini. It runs as an interactive terminal chat and gives the model a set of local file, shell, and web tools so it can inspect and modify code in your working directory.
 
 ## Features
 
 - Interactive CLI chat loop
 - Google Gemini model selection via a command-line flag
 - Optional custom system prompt
+- Configurable max tool-calling turns per response
 - Conversation reset with `/new`
 - Built-in tools for:
   - running shell commands
   - reading files
   - writing files
+  - editing files with `sed`
   - searching file contents
   - finding files by name
   - fetching web pages as readable text
+- Inline tool status messages while the assistant works
 
 ## Requirements
 
@@ -31,21 +34,28 @@ dart pub global activate lea_code
 ## Run
 
 ```bash
-lea_code
+lea
 ```
 
 You can also choose a model and provide a system prompt:
 
 ```bash
-lea_code \
+lea \
   --model gemini-flash-lite-latest \
   --system_prompt "You are a careful coding assistant."
+```
+
+You can also control how many model turns are allowed while using tools:
+
+```bash
+lea --max_turns 100
 ```
 
 ## CLI Options
 
 - `-m`, `--model`: Gemini model name to use. Defaults to `gemini-flash-lite-latest`.
 - `-s`, `--system_prompt`: Optional system prompt passed as output instructions.
+- `-t`, `--max_turns`: Maximum number of turns the model can use in a conversation step. Defaults to `100`.
 
 ## Interactive Commands
 
@@ -54,21 +64,25 @@ lea_code \
 
 ## Built-in Tools
 
-The assistant registers six tools in `LeaCodeEngine`:
+The assistant registers seven tools through `GeneralAgent`:
 
 - `bash`: executes a shell command with `bash -c`
 - `file_read`: reads a file from disk
 - `file_write`: writes content to a file
+- `file_edit`: edits a file using a `sed` command
 - `string_search`: searches the current directory with `grep -r`
 - `file_find`: finds files and directories with `find`
 - `web_fetch`: fetches a URL
+
+Tool usage is surfaced in the terminal as status messages like `[bash] ...` and `[bash] completed`.
 
 These tools operate on the local machine, so use this project only in directories and environments you trust.
 
 ## Project Structure
 
 - `bin/lea_code.dart`: CLI entrypoint and REPL loop
-- `lib/lea_code_engine.dart`: Genkit setup and tool registration
+- `lib/lea_code.dart`: top-level application flow and terminal messaging
+- `lib/agents/general_agent.dart`: Genkit setup and tool registration
 - `lib/tools/`: tool definitions exposed to the model
 - `lib/models/`: typed tool input models and generated schema files
 
@@ -76,5 +90,7 @@ These tools operate on the local machine, so use this project only in directorie
 
 - The application exits early if neither `GOOGLE_GENAI_API_KEY` nor `GEMINI_API_KEY` is set.
 - Tool output is returned directly to the model, including shell stderr when present.
+- The installed executable is `lea`.
 - `string_search` and `file_find` run relative to the current working directory.
+- `file_edit` runs `sed -i ''`, matching BSD/macOS `sed` behavior.
 - `web_fetch` returns text fetched from the target page.

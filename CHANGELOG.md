@@ -1,3 +1,12 @@
+## 0.0.5
+
+- Refactored the CLI around new `LeaCode` and `GeneralAgent` classes, replacing `LeaCodeEngine`.
+- Added a new `file_edit` tool backed by `sed` for in-place file edits.
+- Added tool status messaging so tool start and completion updates are shown in the terminal.
+- Added a `--max_turns` / `-t` CLI option to control the maximum number of model turns per request.
+- Changed the installed executable from `lea_code` to `lea`.
+- Bumped the package version from `0.0.3` to `0.0.5`.
+
 ## 0.0.3
 
 - Added a new `web_fetch` tool so the assistant can fetch web pages as text.
