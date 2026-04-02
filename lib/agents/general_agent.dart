@@ -23,6 +23,9 @@ class GeneralAgent {
   /// The plugin used to fulfill model requests.
   final GenkitPlugin plugin;
 
+  /// The system prompt to use for the agent.
+  final String? systemPrompt;
+
   /// The callback function to handle tool messages.
   final void Function(ToolStatus) onMessage;
 
@@ -34,6 +37,7 @@ class GeneralAgent {
     required this.model,
     required this.plugin,
     required this.onMessage,
+    required this.systemPrompt,
     required this.maxTurns,
   }) {
     ai = Genkit(plugins: [plugin]);
@@ -51,17 +55,18 @@ class GeneralAgent {
   /// Sends [prompt] to the model and returns the generated text response.
   ///
   /// When provided, [messages] are included as prior conversation context.
-  Future<String> query(
+  Future<GenerateResponseHelper> query(
     String prompt, {
     List<Message>? messages,
   }) async {
     final response = await ai.generate(
       model: model,
+      outputInstructions: systemPrompt,
       prompt: prompt,
       messages: messages,
       tools: tools,
       maxTurns: maxTurns,
     );
-    return response.text;
+    return response;
   }
 }

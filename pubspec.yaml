@@ -1,6 +1,6 @@
 name: lea_code
 description: A command-line coding assistant powered by Genkit and Google Gemini.
-version: 0.0.5
+version: 0.0.6
 homepage: https://github.com/David723798/lea_code
 repository: https://github.com/David723798/lea_code
 
@@ -11,6 +11,7 @@ dependencies:
   args: ^2.7.0
   genkit: ^0.12.1
   genkit_google_genai: ^0.2.4
+  genkit_openai: ^0.2.4
   schemantic: ^0.1.1
 
 dev_dependencies:

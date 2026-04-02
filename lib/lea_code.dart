@@ -22,7 +22,7 @@ class LeaCode {
   final GenkitPlugin plugin;
 
   /// The system prompt to use for the agent.
-  final String systemPrompt;
+  final String? systemPrompt;
 
   /// The maximum number of turns to allow in a conversation.
   final int maxTurns;
@@ -35,6 +35,7 @@ class LeaCode {
       model: model,
       plugin: plugin,
       onMessage: toolMessage,
+      systemPrompt: systemPrompt,
       maxTurns: maxTurns,
     );
 
@@ -62,12 +63,9 @@ class LeaCode {
 
       try {
         await thinkingMessage();
-        final response = await agent.ai.generate(
-          model: model,
-          prompt: trimmed,
+        final response = await agent.query(
+          trimmed,
           messages: history,
-          outputInstructions: systemPrompt,
-          tools: agent.tools,
         );
 
         history = response.messages;

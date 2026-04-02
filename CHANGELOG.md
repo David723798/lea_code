@@ -1,3 +1,12 @@
+## 0.0.6
+
+- Added OpenAI provider support via `genkit_openai`.
+- Added `--provider` / `-p` to choose between `google` (default) and `openai`.
+- Added `--api_key` / `-k` and `--base_url` / `-b` for provider configuration.
+- Added `--help` / `-h` and `--version` / `-v`.
+- Made `--system_prompt` optional and routed it through the agent as output instructions.
+- Bumped the package version from `0.0.5` to `0.0.6`.
+
 ## 0.0.5
 
 - Refactored the CLI around new `LeaCode` and `GeneralAgent` classes, replacing `LeaCodeEngine`.
