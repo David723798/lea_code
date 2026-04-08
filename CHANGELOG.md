@@ -1,4 +1,4 @@
-## 0.0.8
+## 0.0.9
 
 - Replaced the single `GeneralAgent` implementation with a staged agent workflow made up of `AnalysisAgent`, `ExecuteAgent`, and `VerifyAgent`.
 - Added `BaseAgent` plus shared read-only and full-access tool mixins so each stage can expose only the tools it needs.

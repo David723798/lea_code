@@ -1,6 +1,6 @@
 name: lea_code
 description: lea_code is a Dart command-line coding assistant powered by Genkit.
-version: 0.0.8
+version: 0.0.9
 homepage: https://github.com/David723798/lea_code
 repository: https://github.com/David723798/lea_code
 
