@@ -1,3 +1,12 @@
+## 0.0.8
+
+- Replaced the single `GeneralAgent` implementation with a staged agent workflow made up of `AnalysisAgent`, `ExecuteAgent`, and `VerifyAgent`.
+- Added `BaseAgent` plus shared read-only and full-access tool mixins so each stage can expose only the tools it needs.
+- Updated `LeaCode` to orchestrate analysis, execution, and verification passes for each request, including retrying execution up to three times when verification fails.
+- Added verification prompt/status handling so verifier responses start with `STATUS: PASS` or `STATUS: FAIL` and only the final user-facing result is shown in the terminal.
+- Turned `lib/agents/general_agent.dart` into a compatibility export for the staged agent classes.
+- Bumped the package version from `0.0.7` to `0.0.8`.
+
 ## 0.0.7
 
 - Replaced the older file and web tool set with a larger runtime-managed tool suite: `read`, `write`, `edit`, `glob`, `grep`, `sleep`, `powershell`, `ask_user_question`, `task_create`, `task_update`, `task_list`, `list_mcp_resources`, and `read_mcp_resource`.

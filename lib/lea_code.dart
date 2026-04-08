@@ -2,13 +2,17 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:genkit/plugin.dart';
-import 'package:lea_code/agents/general_agent.dart';
+import 'package:lea_code/agents/analysis_agent.dart';
+import 'package:lea_code/agents/execute_agent.dart';
+import 'package:lea_code/agents/verify_agent.dart';
 import 'package:lea_code/tools/models/tool_runtime_models.dart';
 import 'package:lea_code/tools/models/tool_status.dart';
 import 'package:lea_code/tools/runtime/tool_runtime.dart';
 
 /// The main class for the Lea Code application.
 class LeaCode {
+  static const int maxVerificationAttempts = 3;
+
   /// Creates a new instance of the Lea Code application.
   const LeaCode({
     required this.model,
@@ -41,7 +45,23 @@ class LeaCode {
       currentWorkingDirectory: Directory.current.path,
     );
 
-    final agent = GeneralAgent(
+    final analysisAgent = AnalysisAgent(
+      model: model,
+      plugin: plugin,
+      onMessage: toolMessage,
+      runtime: runtime,
+      systemPrompt: systemPrompt,
+      maxTurns: maxTurns,
+    );
+    final executeAgent = ExecuteAgent(
+      model: model,
+      plugin: plugin,
+      onMessage: toolMessage,
+      runtime: runtime,
+      systemPrompt: systemPrompt,
+      maxTurns: maxTurns,
+    );
+    final verifyAgent = VerifyAgent(
       model: model,
       plugin: plugin,
       onMessage: toolMessage,
@@ -74,14 +94,46 @@ class LeaCode {
 
       try {
         await thinkingMessage();
-        final response = await agent.query(
+        final analysis = await analysisAgent.query(
           trimmed,
           messages: history,
         );
+        GenerateResponseHelper? execution;
+        GenerateResponseHelper? verification;
+        VerificationStatus verificationStatus = VerificationStatus.fail;
+        String? verificationFeedback;
 
-        history = response.messages;
+        for (var attempt = 1; attempt <= maxVerificationAttempts; attempt++) {
+          execution = await executeAgent.query(
+            buildExecutionPrompt(
+              userRequest: trimmed,
+              analysis: analysis.text,
+              attempt: attempt,
+              previousExecution: execution?.text,
+              verificationFeedback: verificationFeedback,
+            ),
+            messages: history,
+          );
+          verification = await verifyAgent.query(
+            buildVerificationPrompt(
+              userRequest: trimmed,
+              analysis: analysis.text,
+              execution: execution.text,
+              attempt: attempt,
+            ),
+            messages: history,
+          );
+          verificationStatus = parseVerificationStatus(verification.text);
+          verificationFeedback = stripVerificationStatus(verification.text);
 
-        await responseMessage(response.text);
+          if (verificationStatus == VerificationStatus.pass) {
+            break;
+          }
+        }
+
+        history = verification?.messages;
+
+        await responseMessage(verificationFeedback ?? verification?.text ?? '');
       } catch (e) {
         await errorMessage(e);
       }
@@ -111,6 +163,89 @@ class LeaCode {
   /// Displays a message indicating the model is thinking.
   Future<void> thinkingMessage() async {
     stdout.writeln('Thinking...');
+  }
+
+  /// Builds the execution prompt from the analysis result.
+  String buildExecutionPrompt({
+    required String userRequest,
+    required String analysis,
+    required int attempt,
+    String? previousExecution,
+    String? verificationFeedback,
+  }) {
+    final retryContext = switch (attempt) {
+      1 => 'This is the first execution attempt.',
+      _ =>
+        '''
+This is retry attempt $attempt of $maxVerificationAttempts.
+
+Previous execution report:
+${previousExecution ?? 'None'}
+
+Verification feedback from the last attempt:
+${verificationFeedback ?? 'None'}
+
+Address every failure the verifier identified before finishing.
+''',
+    };
+
+    return '''
+User request:
+$userRequest
+
+Analysis:
+$analysis
+
+Retry context:
+$retryContext
+
+Carry out the request. Apply the necessary changes and summarize what you changed.
+''';
+  }
+
+  /// Builds the verification prompt from the analysis and execution results.
+  String buildVerificationPrompt({
+    required String userRequest,
+    required String analysis,
+    required String execution,
+    required int attempt,
+  }) {
+    return '''
+User request:
+$userRequest
+
+Analysis:
+$analysis
+
+Execution report:
+$execution
+
+Verification attempt:
+$attempt of $maxVerificationAttempts
+
+Verify whether the request is fully satisfied. Start with exactly "STATUS: PASS" or "STATUS: FAIL". Run checks when useful, call out any remaining gaps, and provide the final user-facing response.
+''';
+  }
+
+  /// Parses the verification status from the verifier response.
+  VerificationStatus parseVerificationStatus(String response) {
+    final normalized = response.trimLeft().toUpperCase();
+    if (normalized.startsWith('STATUS: PASS')) {
+      return VerificationStatus.pass;
+    }
+    return VerificationStatus.fail;
+  }
+
+  /// Removes the status line from the verifier response before displaying it.
+  String stripVerificationStatus(String response) {
+    final lines = response.split('\n');
+    if (lines.isEmpty) {
+      return response;
+    }
+    if (lines.first.trim().toUpperCase().startsWith('STATUS:')) {
+      return lines.skip(1).join('\n').trim();
+    }
+    return response.trim();
   }
 
   /// Displays the model's response to the user.
@@ -171,4 +306,9 @@ class LeaCode {
     }
     return answers;
   }
+}
+
+enum VerificationStatus {
+  pass,
+  fail,
 }

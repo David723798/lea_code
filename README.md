@@ -5,10 +5,12 @@
 ## Features
 
 - Interactive CLI chat loop
+- Three-stage agent workflow with separate analysis, execution, and verification passes
 - Provider selection for Google or OpenAI-compatible backends
 - Model selection via a command-line flag
 - Optional custom system prompt
 - Configurable max tool-calling turns per response
+- Automatic verification retries for failed execution attempts
 - Conversation reset with `/new`
 - Runtime-managed tools for:
   - reading numbered file content from absolute paths
@@ -94,7 +96,13 @@ lea --max_turns 100
 
 ## Built-in Tools
 
-The assistant now registers fourteen tools through `GeneralAgent`:
+The assistant exposes its tools through stage-specific agents built on `BaseAgent`:
+
+- `AnalysisAgent`: read-oriented planning before any edits are made
+- `ExecuteAgent`: full tool access for making the requested changes
+- `VerifyAgent`: read-oriented validation and final response generation
+
+The full tool set includes fourteen tools:
 
 - `powershell`: runs a PowerShell command when PowerShell is available
 - `glob`: finds files by wildcard pattern using `find`
@@ -115,11 +123,17 @@ Tool usage is surfaced in the terminal as status messages like `[bash] ...` and 
 
 The runtime tracks files that have been read so `edit` and `write` can reject stale overwrites, keeps commands inside the workspace, and can pause for explicit approval before mutating or networked shell commands. These tools operate on the local machine, so use this project only in directories and environments you trust.
 
+Each request now flows through three model stages. The analysis stage inspects the request and prepares a plan without modifying files, the execution stage applies changes, and the verification stage checks whether the request is fully satisfied. When verification fails, Lea Code can retry execution with verifier feedback for up to three attempts before returning the final response.
+
 ## Project Structure
 
 - `bin/lea_code.dart`: CLI entrypoint and REPL loop
-- `lib/lea_code.dart`: top-level application flow, approval prompts, and question handling
-- `lib/agents/general_agent.dart`: Genkit setup and tool registration
+- `lib/lea_code.dart`: top-level application flow, staged agent orchestration, approval prompts, and question handling
+- `lib/agents/base_agent.dart`: shared Genkit wrapper and reusable tool-set mixins
+- `lib/agents/analysis_agent.dart`: read-only planning agent
+- `lib/agents/execute_agent.dart`: execution agent with editing tools
+- `lib/agents/verify_agent.dart`: read-only verification agent
+- `lib/agents/general_agent.dart`: compatibility export for agent classes
 - `lib/tools/`: tool definitions exposed to the model
 - `lib/tools/runtime/`: shared runtime for file tracking, task state, and approvals
 - `lib/tools/models/`: runtime model classes shared across tools
